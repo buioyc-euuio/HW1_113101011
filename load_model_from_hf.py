@@ -12,6 +12,7 @@ from peft import LoraConfig, get_peft_model
 > model = get_peft_model(model, lora_config)
 具體來說，數學上，這是怎麼做到的？ 怎麼將 LoRA 外掛應用到模型上? 怎麼插入的?
 lora 具體來說它的運作機制是甚麼？(這就要看老師的講義了)
+這份檔案裏面LORA設定在幹嘛?
 """
 
 def setup_model_and_lora():
