@@ -7,6 +7,8 @@ import torch
 import matplotlib.pyplot as plt
 from transformers import TrainingArguments, AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, get_peft_model, PeftModel
+from kaggle_secrets import UserSecretsClient
+from huggingface_hub import login
 
 try:
     from trl import SFTTrainer
@@ -61,12 +63,19 @@ def setup_model_and_lora():
     model_name = 'meta-llama/Llama-3.2-1B-Instruct'
     print(f'Loading tokenizer and model: {model_name}...')
 
-    hf_token = os.environ.get('HF_TOKEN') or os.environ.get('HUGGINGFACE_TOKEN')
+    # 從 Kaggle Secrets 讀取 HF_TOKEN，並 login Hugging Face
+    user_secrets = UserSecretsClient()
+    hf_token = user_secrets.get_secret('HF_TOKEN')
+    if not hf_token:
+        hf_token = os.environ.get('HF_TOKEN') or os.environ.get('HUGGINGFACE_TOKEN')
+
     if not hf_token:
         raise RuntimeError(
-            'HF_TOKEN or HUGGINGFACE_TOKEN is not set. ' 
-            'Please add it to Kaggle secrets and enable it in environment.'
+            'HF_TOKEN not found in Kaggle secrets or environment. ' 
+            'Please set it in Kaggle Secrets as HF_TOKEN.'
         )
+
+    login(token=hf_token)
 
     tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=hf_token)
     tokenizer.pad_token = tokenizer.eos_token
