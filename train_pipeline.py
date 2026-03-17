@@ -16,7 +16,7 @@ import pandas as pd
 import torch
 import matplotlib.pyplot as plt
 from transformers import TrainingArguments, AutoModelForCausalLM, AutoTokenizer
-from peft import get_peft_model
+from peft import get_peft_model, PeftModel
 
 try:
     from trl import SFTTrainer
@@ -237,6 +237,69 @@ def evaluate_accuracy(
             f.write(f"accuracy={accuracy:.6f}\ncorrect={correct}\ntotal={total}\n")
 
     return accuracy
+
+
+def generate_predictions(
+    model=None,
+    tokenizer=None,
+    benchmark_csv=None,
+    output_csv="benchmark_predictions.csv",
+    output_dir=None,
+    max_seq_length=512,
+    max_new_tokens=64,
+    num_beams=4,
+):
+    """讀 benchmark.csv 做推論，輸出 Kaggle 提交檔案。"""
+    benchmark_csv = benchmark_csv or os.path.join("dataset", "benchmark.csv")
+
+    if model is None or tokenizer is None:
+        model, tokenizer = setup_model_and_lora()
+        if output_dir:
+            model = PeftModel.from_pretrained(model, output_dir)
+
+    model_device = "cuda" if torch.cuda.is_available() else "cpu"
+    model = model.to(model_device)
+    model.eval()
+
+    benchmark_df = pd.read_csv(benchmark_csv, dtype=str)
+
+    results = []
+    for _, row in benchmark_df.iterrows():
+        prompt = format_prompt(row, is_test=True)
+        inputs = tokenizer(
+            prompt,
+            truncation=True,
+            max_length=max_seq_length,
+            padding=True,
+            return_tensors="pt",
+        ).to(model_device)
+
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                do_sample=False,
+                num_beams=num_beams,
+                early_stopping=True,
+                pad_token_id=tokenizer.eos_token_id,
+            )
+
+        generated_text = tokenizer.decode(
+            outputs[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True
+        )
+
+        predicted = _extract_predicted_option(generated_text)
+        if predicted is None:
+            predicted = "A"  # fallback
+
+        question_id = row.get("question_id", None)
+        results.append({"question_id": question_id, "ans": predicted})
+
+    submission_df = pd.DataFrame(results)
+    submission_df.to_csv(output_csv, index=False, encoding="utf-8")
+
+    print(f"Saved Kaggle submission predictions to {output_csv}")
+    return submission_df
 
 
 if __name__ == "__main__":
