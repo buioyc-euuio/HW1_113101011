@@ -1,4 +1,16 @@
+import sys
 import os
+
+# 告訴 Python 也要去你的 GitHub 資料夾裡面找檔案
+# 請確保路徑中的資料夾名稱跟你的 GitHub Repo 名稱一致
+repo_path = '/kaggle/working/HW1_113101011'
+if repo_path not in sys.path:
+    sys.path.append(repo_path)
+
+# 現在再跑你的 import 就不會報錯了
+from split_dataset import format_prompt
+from load_model_from_hf import setup_model_and_lora
+
 import re
 import pandas as pd
 import torch
