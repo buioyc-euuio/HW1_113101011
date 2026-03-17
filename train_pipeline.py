@@ -1,5 +1,6 @@
 import sys
 import os
+import inspect
 
 # 告訴 Python 也要去你的 GitHub 資料夾裡面找檔案
 # 請確保路徑中的資料夾名稱跟你的 GitHub Repo 名稱一致
@@ -100,22 +101,33 @@ def train_model(
     eval_dataset = _build_causal_dataset(val_texts, tokenizer, max_length=max_seq_length)
 
     # 4. TrainingArguments
-    training_args = TrainingArguments(
-        output_dir=output_dir,
-        num_train_epochs=num_train_epochs,
-        per_device_train_batch_size=per_device_train_batch_size,
-        per_device_eval_batch_size=per_device_eval_batch_size,
-        learning_rate=learning_rate,
-        logging_steps=logging_steps,
-        save_strategy=save_strategy,
-        evaluation_strategy=evaluation_strategy,
-        save_total_limit=save_total_limit,
-        fp16=torch.cuda.is_available(),
-        optim="adamw_torch",
-        report_to="none",
-        load_best_model_at_end=True,
-        metric_for_best_model="loss",
-    )
+    training_args_kwargs = {
+        'output_dir': output_dir,
+        'num_train_epochs': num_train_epochs,
+        'per_device_train_batch_size': per_device_train_batch_size,
+        'per_device_eval_batch_size': per_device_eval_batch_size,
+        'learning_rate': learning_rate,
+        'logging_steps': logging_steps,
+        'save_strategy': save_strategy,
+        'evaluation_strategy': evaluation_strategy,
+        'save_total_limit': save_total_limit,
+        'fp16': torch.cuda.is_available(),
+        'optim': 'adamw_torch',
+        'report_to': 'none',
+        'load_best_model_at_end': True,
+        'metric_for_best_model': 'loss',
+    }
+
+    valid_params = inspect.signature(TrainingArguments.__init__).parameters
+    training_args_kwargs = {
+        k: v
+        for k, v in training_args_kwargs.items()
+        if k in valid_params
+    }
+    if 'evaluation_strategy' not in training_args_kwargs and 'eval_strategy' in valid_params:
+        training_args_kwargs['eval_strategy'] = evaluation_strategy
+
+    training_args = TrainingArguments(**training_args_kwargs)
 
     # 5. 建立 SFTTrainer
     trainer = SFTTrainer(
