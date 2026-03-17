@@ -77,13 +77,13 @@ def setup_model_and_lora():
 
     login(token=hf_token)
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=hf_token)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_token)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = 'right'
 
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
-        use_auth_token=hf_token,
+        token=hf_token,
         device_map='auto',
         torch_dtype=torch.bfloat16,
     )
