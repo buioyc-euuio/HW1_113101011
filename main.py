@@ -193,7 +193,6 @@ def train_model(
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         args=training_args,
-        tokenizer=tokenizer,
     )
 
     print('Starting training...')
