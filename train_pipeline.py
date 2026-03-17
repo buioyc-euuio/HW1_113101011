@@ -42,9 +42,10 @@ def _build_causal_dataset(texts, tokenizer, max_length=512):
 
 
 def train_model(
-    train_csv="dataset/train.csv",
-    val_csv="dataset/val.csv",
-    output_dir="saved_models/lora_finetuned",
+    train_csv=None,
+    val_csv=None,
+    test_csv=None,
+    output_dir=None,
     num_train_epochs=3,
     per_device_train_batch_size=2,
     per_device_eval_batch_size=2,
@@ -59,6 +60,15 @@ def train_model(
 
     主要依作業要求：設定學習率、Batch Size、Epoch 數，並儲存至 saved_models/。
     """
+
+    # Kaggle paths
+    kaggle_input_dir = "/kaggle/input/aihw1_dataset_splitted"
+    kaggle_output_dir = "/kaggle/working/saved_models/lora_finetuned"
+
+    train_csv = train_csv or os.path.join(kaggle_input_dir, "train.csv")
+    val_csv = val_csv or os.path.join(kaggle_input_dir, "val.csv")
+    test_csv = test_csv or os.path.join(kaggle_input_dir, "test.csv")
+    output_dir = output_dir or kaggle_output_dir
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
@@ -218,11 +228,14 @@ def evaluate_accuracy(
 
 
 if __name__ == "__main__":
-    # 執行全流程
+    # Kaggle 命名空間路徑
+    kaggle_input_dir = "/kaggle/input/aihw1_dataset_splitted"
+    kaggle_output_dir = "/kaggle/working/saved_models/lora_finetuned"
+
     trained = train_model(
-        train_csv="dataset/train.csv",
-        val_csv="dataset/val.csv",
-        output_dir="saved_models/lora_finetuned",
+        train_csv=os.path.join(kaggle_input_dir, "train.csv"),
+        val_csv=os.path.join(kaggle_input_dir, "val.csv"),
+        output_dir=kaggle_output_dir,
         num_train_epochs=3,
         per_device_train_batch_size=2,
         per_device_eval_batch_size=2,
@@ -230,17 +243,17 @@ if __name__ == "__main__":
         max_seq_length=512,
     )
 
-    plot_training_history(trained, output_path="saved_models/training_history.png")
+    plot_training_history(trained, output_path=os.path.join(kaggle_output_dir, "training_history.png"))
 
     # 重新載入最佳模型以進行測試
-    best_model = AutoModelForCausalLM.from_pretrained("saved_models/lora_finetuned")
-    best_tokenizer = AutoTokenizer.from_pretrained("saved_models/lora_finetuned")
+    best_model = AutoModelForCausalLM.from_pretrained(kaggle_output_dir)
+    best_tokenizer = AutoTokenizer.from_pretrained(kaggle_output_dir)
 
     evaluate_accuracy(
         best_model,
         best_tokenizer,
-        test_csv="dataset/test.csv",
+        test_csv=os.path.join(kaggle_input_dir, "test.csv"),
         max_seq_length=512,
         max_new_tokens=32,
-        output_dir="saved_models/lora_finetuned",
+        output_dir=kaggle_output_dir,
     )
