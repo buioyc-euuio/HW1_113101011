@@ -118,7 +118,7 @@ def train_model(
     evaluation_strategy='epoch',
     save_total_limit=2,
 ):
-    kaggle_input_dir = '/kaggle/input/aihw1_dataset_splitted'
+    kaggle_input_dir = '/kaggle/input/datasets/nycu113101011/aihw1-dataset-splitted'
     kaggle_output_dir = '/kaggle/working/saved_models/lora_finetuned'
 
     train_csv = train_csv or os.path.join(kaggle_input_dir, 'train.csv')
@@ -326,9 +326,9 @@ def generate_predictions(
 
 def run_full_pipeline(use_kaggle=True):
     if use_kaggle:
-        data_root = '/kaggle/input/aihw1_dataset_splitted'
-        dataset_csv = '/kaggle/input/aihw1_dataset_splitted/dataset.csv'
-        benchmark_csv = '/kaggle/input/aihw1_dataset_splitted/benchmark.csv'
+        data_root = '/kaggle/input/datasets/nycu113101011/aihw1-dataset-splitted'
+        dataset_csv = '/kaggle/input/datasets/nycu113101011/aihw1-dataset-splitted/dataset.csv'
+        benchmark_csv = '/kaggle/input/datasets/nycu113101011/aihw1-dataset-splitted/benchmark.csv'
         output_dir = '/kaggle/working/saved_models/lora_finetuned'
     else:
         data_root = 'dataset'

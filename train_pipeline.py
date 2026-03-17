@@ -74,7 +74,7 @@ def train_model(
     """
 
     # Kaggle paths
-    kaggle_input_dir = "/kaggle/input/aihw1_dataset_splitted"
+    kaggle_input_dir = "/kaggle/input/datasets/nycu113101011/aihw1-dataset-splitted"
     kaggle_output_dir = "/kaggle/working/saved_models/lora_finetuned"
 
     train_csv = train_csv or os.path.join(kaggle_input_dir, "train.csv")
