@@ -104,6 +104,9 @@ def setup_model_and_lora():
     return model, tokenizer
 
 
+from datasets import Dataset
+
+
 def _build_causal_dataset(texts, tokenizer, max_length=512):
     encodings = tokenizer(
         texts,
@@ -116,13 +119,12 @@ def _build_causal_dataset(texts, tokenizer, max_length=512):
     attention_mask = encodings.attention_mask
     labels[attention_mask == 0] = -100
 
-    dataset = torch.utils.data.TensorDataset(
-        encodings.input_ids,
-        encodings.attention_mask,
-        labels,
-    )
-    # SFTTrainer expects .column_names (non-empty) to avoid iter(dataset).keys() on tuple
-    dataset.column_names = ['input_ids', 'attention_mask', 'labels']
+    # 轉為 HuggingFace Dataset 以符合 SFTTrainer 需求
+    dataset = Dataset.from_dict({
+        'input_ids': encodings.input_ids.tolist(),
+        'attention_mask': encodings.attention_mask.tolist(),
+        'labels': labels.tolist(),
+    })
     return dataset
 
 

@@ -16,6 +16,7 @@ import re
 import pandas as pd
 import torch
 import matplotlib.pyplot as plt
+from datasets import Dataset
 from transformers import TrainingArguments, AutoModelForCausalLM, AutoTokenizer
 from peft import get_peft_model, PeftModel
 
@@ -46,12 +47,11 @@ def _build_causal_dataset(texts, tokenizer, max_length=512):
     attention_mask = encodings.attention_mask
     labels[attention_mask == 0] = -100
 
-    dataset = torch.utils.data.TensorDataset(
-        encodings.input_ids,
-        encodings.attention_mask,
-        labels,
-    )
-    dataset.column_names = ["input_ids", "attention_mask", "labels"]
+    dataset = Dataset.from_dict({
+        "input_ids": encodings.input_ids.tolist(),
+        "attention_mask": encodings.attention_mask.tolist(),
+        "labels": labels.tolist(),
+    })
     return dataset
 
 
