@@ -2,6 +2,18 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, get_peft_model
 
+"""
+我會想知道 這邊每一段的細節是甚麼，背後的運作模式，以及他確切來說到底會從HF下載下來什麼檔案，
+為什麼 llama 願意開源? 那它的商業機密怎麼半? 他會開源什麼 但不公開甚麼?
+為什麼我能下載他的model 然後甚至能用LoRA去 finetune? 
+> lora_config = LoraConfig() 
+這個 config 裡面在幹嘛?
+> # 5. 將 LoRA 外掛應用到模型上
+> model = get_peft_model(model, lora_config)
+具體來說，數學上，這是怎麼做到的？ 怎麼將 LoRA 外掛應用到模型上? 怎麼插入的?
+lora 具體來說它的運作機制是甚麼？(這就要看老師的講義了)
+"""
+
 def setup_model_and_lora():
     """
     載入 Llama-3.2-1B-Instruct 模型，並套用 LoRA 微調設定。
