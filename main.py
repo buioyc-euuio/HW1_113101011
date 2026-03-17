@@ -1,3 +1,4 @@
+# !pip install trl
 import os
 import re
 
@@ -59,12 +60,21 @@ def format_prompt(row, is_test=False):
 def setup_model_and_lora():
     model_name = 'meta-llama/Llama-3.2-1B-Instruct'
     print(f'Loading tokenizer and model: {model_name}...')
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+    hf_token = os.environ.get('HF_TOKEN') or os.environ.get('HUGGINGFACE_TOKEN')
+    if not hf_token:
+        raise RuntimeError(
+            'HF_TOKEN or HUGGINGFACE_TOKEN is not set. ' 
+            'Please add it to Kaggle secrets and enable it in environment.'
+        )
+
+    tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=hf_token)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = 'right'
 
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
+        use_auth_token=hf_token,
         device_map='auto',
         torch_dtype=torch.bfloat16,
     )
