@@ -51,6 +51,7 @@ def _build_causal_dataset(texts, tokenizer, max_length=512):
         encodings.attention_mask,
         labels,
     )
+    dataset.column_names = ["input_ids", "attention_mask", "labels"]
     return dataset
 
 

@@ -121,6 +121,8 @@ def _build_causal_dataset(texts, tokenizer, max_length=512):
         encodings.attention_mask,
         labels,
     )
+    # SFTTrainer expects .column_names (non-empty) to avoid iter(dataset).keys() on tuple
+    dataset.column_names = ['input_ids', 'attention_mask', 'labels']
     return dataset
 
 
