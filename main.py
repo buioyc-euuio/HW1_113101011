@@ -5,6 +5,7 @@ import inspect
 
 import pandas as pd
 import torch
+from tqdm.auto import tqdm
 import matplotlib.pyplot as plt
 from transformers import TrainingArguments, AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, get_peft_model, PeftModel
@@ -199,6 +200,9 @@ def train_model(
         args=training_args,
     )
 
+    # 方便後續評估/推論直接使用 tokenizer
+    trainer.tokenizer = tokenizer
+
     print('Starting training...')
     trainer.train()
 
@@ -206,7 +210,7 @@ def train_model(
     trainer.save_model(output_dir)
     tokenizer.save_pretrained(output_dir)
 
-    return trainer
+    return trainer, model, tokenizer
 
 
 def plot_training_history(trainer, output_path='saved_models/training_history.png'):
@@ -252,13 +256,23 @@ def _extract_predicted_option(text):
 
 
 def evaluate_accuracy(
-    model,
-    tokenizer,
+    model=None,
+    tokenizer=None,
     test_csv='dataset/test.csv',
     max_seq_length=512,
     max_new_tokens=32,
     output_dir=None,
 ):
+    if model is None or tokenizer is None:
+        model, tokenizer = setup_model_and_lora()
+        if output_dir:
+            model = PeftModel.from_pretrained(model, output_dir)
+
+    if model is None:
+        raise RuntimeError('evaluate_accuracy: model is None after setup. Please check setup_model_and_lora or load_model_from_hf.')
+    if tokenizer is None:
+        raise RuntimeError('evaluate_accuracy: tokenizer is None after setup. Please check setup_model_and_lora.')
+
     test_df = pd.read_csv(test_csv)
 
     model_device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -268,7 +282,7 @@ def evaluate_accuracy(
     correct = 0
     total = 0
 
-    for _, row in test_df.iterrows():
+    for _, row in tqdm(test_df.iterrows(), total=len(test_df), desc='Test eval', unit='row'):
         prompt = format_prompt(row, is_test=True)
         inputs = tokenizer(prompt, truncation=True, max_length=max_seq_length, return_tensors='pt').to(model_device)
 
@@ -325,7 +339,7 @@ def generate_predictions(
     benchmark_df = pd.read_csv(benchmark_csv, dtype=str)
 
     results = []
-    for _, row in benchmark_df.iterrows():
+    for _, row in tqdm(benchmark_df.iterrows(), total=len(benchmark_df), desc='Benchmark inference', unit='q'):
         prompt = format_prompt(row, is_test=True)
         inputs = tokenizer(
             prompt,
@@ -380,7 +394,7 @@ def run_full_pipeline(use_kaggle=True):
     sample_prompt = format_prompt(test_df.iloc[0], is_test=True)
     print('Sample prompt:\n', sample_prompt)
 
-    trainer = train_model(
+    trainer, model, tokenizer = train_model(
         train_csv=os.path.join(data_root, 'train.csv'),
         val_csv=os.path.join(data_root, 'val.csv'),
         output_dir=output_dir,
@@ -394,8 +408,8 @@ def run_full_pipeline(use_kaggle=True):
     plot_training_history(trainer, output_path=os.path.join(output_dir, 'training_history.png'))
 
     evaluate_accuracy(
-        model=None,
-        tokenizer=None,
+        model=model,
+        tokenizer=tokenizer,
         test_csv=os.path.join(data_root, 'test.csv'),
         max_seq_length=512,
         max_new_tokens=32,
@@ -404,8 +418,8 @@ def run_full_pipeline(use_kaggle=True):
 
     submission_csv = os.path.join(output_dir, 'benchmark_submission.csv')
     generate_predictions(
-        model=None,
-        tokenizer=None,
+        model=model,
+        tokenizer=tokenizer,
         benchmark_csv=benchmark_csv,
         output_csv=submission_csv,
         output_dir=output_dir,

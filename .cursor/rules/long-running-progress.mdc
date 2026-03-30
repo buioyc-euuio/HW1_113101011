@@ -1,0 +1,14 @@
+---
+description: 長時間執行的訓練／推理等程式必須顯示進度
+alwaysApply: true
+---
+
+# 長時間程式進度條
+
+當實作或修改**可能跑很久**的程式碼時（例如：`training`、`inference`、大量檔案／列的迴圈、epoch 訓練、對整份 `benchmark.csv` 逐題生成），請加上使用者可見的**進度回饋**：
+
+- **Python**：優先使用 **`tqdm`**（`from tqdm.auto import tqdm`），對 `for` 迴圈標明 `total=` 與有意義的 `desc=`（例如 `desc="Inference"`）。
+- **Hugging Face `Trainer` / TRL**：預設通常已有 tqdm；**不要**設定 `disable_tqdm=True`；若被關掉請恢復進度顯示。
+- **Notebook**：同樣使用 `tqdm.auto`，以便在終端或 notebook 都能顯示。
+
+若環境沒有 `tqdm`，在 `requirements.txt` 補上 `tqdm` 或使用專案既有依賴中已包含的 tqdm（許多 ML 套件會間接依賴）。
