@@ -89,10 +89,12 @@ Kaggle 沒有「固定只能放某一個資料夾名稱」，重要的是 **`ADA
 
 | 項目 | 預設 |
 |------|------|
-| `ADAPTER_DIR` | `/kaggle/working/saved_models/lora_finetuned`（與 `main.py` 訓練輸出位置一致） |
+| `ADAPTER_DIR` | `/kaggle/input/models/nycu113101011/ai-hw1-model1/transformers/default/1/kaggle/working/saved_models/lora_finetuned`（**Kaggle Models** 實際掛載路徑；版本號 `1` 若升版請改路徑或設 `ADAPTER_DIR`） |
 | `BENCHMARK_CSV` | `/kaggle/input/datasets/nycu113101011/aihw1-dataset-splitted/benchmark.csv` |
 | `OUTPUT_CSV` | `/kaggle/working/benchmark_predictions.csv` |
 | `HF_TOKEN` | 若環境變數未設定，會嘗試自 Kaggle **Secrets** 讀取名為 `HF_TOKEN` 的 secret |
+
+若 LoRA 是同一個 Notebook 訓練後直接存在 `working`，請設 `ADAPTER_DIR=/kaggle/working/saved_models/lora_finetuned`。若 Models 路徑不同，請從 Notebook 左側 Input 複製完整路徑設成 `ADAPTER_DIR`。
 
 **你需要做的：**
 
